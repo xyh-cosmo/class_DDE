@@ -60,6 +60,7 @@ struct background
 		     newtonian gauge!!!) */
 
 /* *tabulate_w, *tabulate_z and w_table_size are added by Youhua Xu, @Jan-4-2017 */
+  double Omega0_w;
   double *tabulate_w;   /**< \f$ \bm{w}=\{w_i\} \f$: a series of w_i at low redshifts, will be used to approximate w(z) at any redshift in
                         the range covered by \f$ \bm{z}=\{z_i\} \f$ */
   double *tabulate_z;   /**< \f$ \bm{z}=\{z_i\} \f$: redshifts correspond to w_i */

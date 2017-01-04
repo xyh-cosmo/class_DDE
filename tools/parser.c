@@ -235,8 +235,8 @@ int parser_read_double(
   /* read parameter value. If this fails, return an error */
 
   class_test(sscanf(pfc->value[index],"%lg",value) != 1,
-	     errmsg,
-	     "could not read value of parameter %s in file %s\n",name,pfc->filename);
+	         errmsg,
+	         "could not read value of parameter %s in file %s\n",name,pfc->filename);
 
   /* if parameter read correctly, set 'found' flag to true, as well as the flag
      associated with this parameter in the file_content structure */

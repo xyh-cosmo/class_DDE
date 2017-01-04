@@ -406,7 +406,7 @@ int background_functions(
     //              "pba->has_lambda should not be true when using tabulated {wi}!");
 
 
-    double rho_de
+    // double rho_de
   }
 
   /* relativistic neutrinos (and all relativistic relics) */
@@ -730,6 +730,16 @@ int background_indices(
   if (pba->Omega0_fld != 0.)
     pba->has_fld = _TRUE_;
 
+  /* added by Youhua Xu @Jan-4-2017 */
+  if( pba->Omega0_w != 0. ){
+    pba->has_tabulated_w = _TRUE_;
+
+  /* force switch off of other possibilities */
+    pba->has_lambda = _FALSE_;
+    pba->has_fld = _FALSE_;
+    pba->has_scf = _FALSE_;
+  }
+
   if (pba->Omega0_ur != 0.)
     pba->has_ur = _TRUE_;
 
@@ -787,8 +797,10 @@ int background_indices(
   /* - index for fluid */
   class_define_index(pba->index_bg_rho_fld,pba->has_fld,index_bg,1);
 
-  /* - index for tabulated {wi} (added by Youhua Xu)*/
-  class_define_index(pba->index_bg_tabulated_w, pba->has_tabulated_w, index_bg, pab->w_table_size);
+  /* - index for tabulated {wi} (added by Youhua Xu)
+     we need {wi} as well as {zi}
+  */
+  class_define_index(pba->index_bg_tabulated_w, pba->has_tabulated_w, index_bg, 2*pba->w_table_size);
 
   /* - index for ultra-relativistic neutrinos/species */
   class_define_index(pba->index_bg_rho_ur,pba->has_ur,index_bg,1);
