@@ -405,6 +405,8 @@ int background_functions(
     //              pba->error_message,
     //              "pba->has_lambda should not be true when using tabulated {wi}!");
 
+
+    double rho_de
   }
 
   /* relativistic neutrinos (and all relativistic relics) */
@@ -705,6 +707,7 @@ int background_indices(
   pba->has_fld = _FALSE_;
   pba->has_ur = _FALSE_;
   pba->has_curvature = _FALSE_;
+  pba->has_tabulated_w = _FALSE_;
 
   if (pba->Omega0_cdm != 0.)
     pba->has_cdm = _TRUE_;
@@ -783,6 +786,9 @@ int background_indices(
 
   /* - index for fluid */
   class_define_index(pba->index_bg_rho_fld,pba->has_fld,index_bg,1);
+
+  /* - index for tabulated {wi} (added by Youhua Xu)*/
+  class_define_index(pba->index_bg_tabulated_w, pba->has_tabulated_w, index_bg, pab->w_table_size);
 
   /* - index for ultra-relativistic neutrinos/species */
   class_define_index(pba->index_bg_rho_ur,pba->has_ur,index_bg,1);
@@ -1499,8 +1505,8 @@ int background_solve(
                                   ppr->tol_background_integration,
                                   ppr->smallest_allowed_variation,
                                   &gi),
-               gi.error_message,
-               pba->error_message);
+                                  gi.error_message,
+                                  pba->error_message);
 
     /* -> store value of tau */
     pvecback_integration[pba->index_bi_tau]=tau_end;
@@ -1537,8 +1543,8 @@ int background_solve(
                                pvecback_integration,
                                pba->bi_size,
                                pba->error_message),
-             pba->error_message,
-             pba->error_message);
+                               pba->error_message,
+                               pba->error_message);
 
   /* substitute last line with quantities today */
   for (i=0; i<pba->bi_size; i++)
@@ -1629,8 +1635,8 @@ int background_solve(
                                       pba->d2tau_dz2_table,
                                       _SPLINE_EST_DERIV_,
                                       pba->error_message),
-             pba->error_message,
-             pba->error_message);
+                                      pba->error_message,
+                                      pba->error_message);
 
   class_call(array_spline_table_lines(pba->tau_table,
                                       pba->bt_size,
@@ -1639,8 +1645,8 @@ int background_solve(
                                       pba->d2background_dtau2_table,
                                       _SPLINE_EST_DERIV_,
                                       pba->error_message),
-             pba->error_message,
-             pba->error_message);
+                                      pba->error_message,
+                                      pba->error_message);
 
   /** - compute remaining "related parameters"
    *     - so-called "effective neutrino number", computed at earliest

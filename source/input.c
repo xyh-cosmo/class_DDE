@@ -175,8 +175,8 @@ int input_init_from_arguments(
                         ple,
                         pop,
                         errmsg),
-             errmsg,
-             errmsg);
+                        errmsg,
+                        errmsg);
 
   class_call(parser_free(&fc),errmsg,errmsg);
 
@@ -203,8 +203,7 @@ int input_init(
                struct nonlinear * pnl,
                struct lensing *ple,
                struct output *pop,
-               ErrorMsg errmsg
-               ) {
+               ErrorMsg errmsg ) {
 
   int flag1;
   double param1;
@@ -247,8 +246,8 @@ int input_init(
                                   &param1,
                                   &flag1,
                                   errmsg),
-               errmsg,
-               errmsg);
+                                  errmsg,
+                                  errmsg);
     if (flag1 == _TRUE_){
       /** - --> input_auxillary_target_conditions() takes care of the case where for
           instance Omega_dcdmdr is set to 0.0.
@@ -258,7 +257,7 @@ int input_init(
                                                    param1,
                                                    &aux_flag,
                                                    errmsg),
-                 errmsg, errmsg);
+                                                   errmsg, errmsg);
       if (aux_flag == _TRUE_){
         //printf("Found target: %s\n",target_namestrings[index_target]);
         target_indices[unknown_parameters_size] = index_target;
@@ -348,7 +347,7 @@ int input_init(
                                  dxdF,
                                  &fzw,
                                  errmsg),
-                 errmsg, errmsg);
+                                 errmsg, errmsg);
 
       class_call_try(fzero_Newton(input_try_unknown_parameters,
                                   x_inout,
@@ -359,7 +358,7 @@ int input_init(
                                   &fzw,
                                   &fevals,
                                   errmsg),
-                     errmsg, pba->shooting_error,shooting_failed=_TRUE_);
+                                  errmsg, pba->shooting_error,shooting_failed=_TRUE_);
 
       if (input_verbose > 0) {
         fprintf(stdout,"Computing unknown input parameters\n");

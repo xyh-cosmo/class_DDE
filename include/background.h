@@ -165,6 +165,8 @@ struct background
   int index_bg_rho_dcdm;      /**< dcdm density */
   int index_bg_rho_dr;        /**< dr density */
 
+  int index_bg_tabulated_w;   /**< tabulated EoS {wi}  (added by Youhua Xu @Jan-4-2017)*/
+
   int index_bg_phi_scf;       /**< scalar field value */
   int index_bg_phi_prime_scf; /**< scalar field derivative wrt conformal time */
   int index_bg_V_scf;         /**< scalar field potential V */
@@ -268,6 +270,7 @@ struct background
   short has_ur;        /**< presence of ultra-relativistic neutrinos/relics? */
   short has_curvature; /**< presence of global spatial curvature? */
 
+  /* added by Youhua Xu */
   short has_tabulated_w; /**< presence of tabulated EoS for dark energy */
 
   //@}
