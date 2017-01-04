@@ -59,6 +59,12 @@ struct background
 		     not [delta p/delta rho] in the synchronous or
 		     newtonian gauge!!!) */
 
+/* *tabulate_w, *tabulate_z and w_table_size are added by Youhua Xu, @Jan-4-2017 */
+  double *tabulate_w;   /**< \f$ \bm{w}=\{w_i\} \f$: a series of w_i at low redshifts, will be used to approximate w(z) at any redshift in
+                        the range covered by \f$ \bm{z}=\{z_i\} \f$ */
+  double *tabulate_z;   /**< \f$ \bm{z}=\{z_i\} \f$: redshifts correspond to w_i */
+  int    w_table_size;  /** <size of the tabulate */
+
   double Omega0_ur; /**< \f$ \Omega_{0 \nu r} \f$: ultra-relativistic neutrinos */
 
   double Omega0_dcdmdr; /**< \f$ \Omega_{0 dcdm}+\Omega_{0 dr} \f$: decaying cold dark matter (dcdm) decaying to dark radiation (dr) */
@@ -261,6 +267,8 @@ struct background
   short has_fld;       /**< presence of fluid with constant w and cs2? */
   short has_ur;        /**< presence of ultra-relativistic neutrinos/relics? */
   short has_curvature; /**< presence of global spatial curvature? */
+
+  short has_tabulated_w; /**< presence of tabulated EoS for dark energy */
 
   //@}
 
