@@ -412,7 +412,8 @@ int background_functions(
                 pba->error_message );
     pvecback[pba->index_bg_w_DDE] = w;
     pvecback[pba->index_bg_weff_DDE] = weff;
-    pvecback[pba->index_bg_rho_DDE] = pba->Omega0_DDE*pow(a_rel,-3.0*(1.+weff));
+    // pvecback[pba->index_bg_rho_DDE] = pba->Omega0_DDE*pow(a_rel,-3.0*(1.+weff));
+    pvecback[pba->index_bg_rho_DDE] = pba->Omega0_DDE * pow(pba->H0,2);
     rho_tot += pvecback[pba->index_bg_rho_DDE];
     p_tot += w*pvecback[pba->index_bg_rho_DDE];
   }
@@ -1421,12 +1422,17 @@ int background_ncdm_M_from_Omega(
   return _SUCCESS_;
 }
 
+int background_EoS_init( struct background *pba ){
+
+}
+
 int background_EoS(
                     struct background *pba,
                     double z,
                     double *w,
                     double *weff
                     ){
+
     if( z > pba->DDE_z[pba->DDE_table_size-1] ){
         *w = -1.0;
         *weff = -1.0;
