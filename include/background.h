@@ -68,6 +68,7 @@ struct background
                         used to approximate w(z) at any redshift in the range covered by
                         \f$ \bm{z}=\{z_i\} \f$ */
     int    DDE_table_size;  /** <size of the tabulate */
+    int    DDE_approximation; /* 0: steps; 1: spline interpolation over grids */
 
     double Omega0_ur; /**< \f$ \Omega_{0 \nu r} \f$: ultra-relativistic neutrinos */
 
