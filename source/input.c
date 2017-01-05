@@ -934,11 +934,11 @@ int input_read_parameters(
   /** - Omega0_lambda (cosmological constant),
         Omega0_fld (dark energy fluid),
         Omega0_scf (scalar field)
-        Omega0_w (EoS is approximated by a series of values.  added by Youhua Xu @Jan-4-2017)
+        Omega0_DDE (EoS is approximated by a series of values.  added by Youhua Xu @Jan-4-2017)
     */
 
-  int flag_Omega_w;
-  double param_Omega_w;
+  int flag_Omega_DDE;
+  double param_Omega_DDE;
 
   class_call(parser_read_double(pfc,"Omega_Lambda",&param1,&flag1,errmsg),
              errmsg,
@@ -949,15 +949,15 @@ int input_read_parameters(
   class_call(parser_read_double(pfc,"Omega_scf",&param3,&flag3,errmsg),
              errmsg,
              errmsg);
-
-  class_call(parser_read_double(pfc,"Omega_w",&param_Omega_w,&flag_Omega_w,errmsg),
+  /* added by Youhua Xu */
+  class_call(parser_read_double(pfc,"Omega_DDE",&param_Omega_DDE,&flag_Omega_DDE,errmsg),
              errmsg,
              errmsg);
 
 /* modification made by Youhua Xu here !!! */
-  class_test((flag1 == _TRUE_) && (flag2 == _TRUE_) && (flag_Omega_w == _TRUE_) && ((flag3 == _FALSE_) || (param3 >= 0.)),
+  class_test((flag1 == _TRUE_) && (flag2 == _TRUE_) && (flag_Omega_DDE == _TRUE_) && ((flag3 == _FALSE_) || (param3 >= 0.)),
              errmsg,
-             "In input file, either Omega_Lambda or Omega_fld or Omega_w must be left unspecified, except if Omega_scf is set and <0.0, in which case the contribution from the scalar field will be the free parameter.");
+             "In input file, either Omega_Lambda or Omega_fld or Omega_DDE must be left unspecified, except if Omega_scf is set and <0.0, in which case the contribution from the scalar field will be the free parameter.");
 
   /** - --> (flag3 == _FALSE_) || (param3 >= 0.) explained:
    *  it means that either we have not read Omega_scf so we are ignoring it
@@ -982,11 +982,11 @@ int input_read_parameters(
     pba->Omega0_scf = param3;
     Omega_tot += pba->Omega0_scf;
   }
-  if (flag_Omega_w == _TRUE_){
+  if (flag_Omega_DDE == _TRUE_){
       /* added bu YHX @ Jan-4-2017.
-      BUT, pba->Omega0_w should be derived from the closure relation !!! */
-      pba->Omega0_w = param_Omega_w;
-      Omega_tot += pba->Omega0_w;
+      BUT, pba->Omega0_DDE should be derived from the closure relation !!! */
+      pba->Omega0_DDE = param_Omega_DDE;
+      Omega_tot += pba->Omega0_DDE;
   }
 
   /* Step 2 */
@@ -994,20 +994,13 @@ int input_read_parameters(
     pba->Omega0_lambda= 1. - pba->Omega0_k - Omega_tot;
   else if (flag2 == _FALSE_)  // Fill up with fluid
     pba->Omega0_fld = 1. - pba->Omega0_k - Omega_tot;
-  else if (flag_Omega_w == _FALSE_)
-    pba->Omega0_w = 1. - pba->Omega0_k - Omega_tot;
+  else if (flag_Omega_DDE == _FALSE_)
+    pba->Omega0_DDE = 1. - pba->Omega0_k - Omega_tot;
   else if ((flag3 == _TRUE_) && (param3 < 0.)){ // Fill up with scalar field
     pba->Omega0_scf = 1. - pba->Omega0_k - Omega_tot;
   }
 
-  /* To use Omega0_w, set Omega0_lambda, Omega0_fld and Omega0_scf all to ZERO !!! */
-  // printf("pba->Omega0_lambda = %g\n", pba->Omega0_lambda);
-  // printf("pba->Omega0_fld    = %g\n", pba->Omega0_fld);
-  // printf("pba->Omega0_scf    = %g\n", pba->Omega0_scf);
-  // printf("pba->Omega0_w      = %g\n", pba->Omega0_w);
-  // exit(0);
-
-  if( pba->Omega0_w = 0.0 ){ /* do test when Omega0_w == 0 */
+  if( pba->Omega0_DDE = 0.0 ){ /* do test when Omega0_DDE == 0 */
 
       /** - Test that the user have not specified Omega_scf = -1 but left either
           Omega_lambda or Omega_fld unspecified:*/
@@ -1066,32 +1059,70 @@ int input_read_parameters(
       }
   }
   else{
-      /* now read zi and wi:
-        read {zi} from tabulate_w_z = ...
-        read {wi} from tabulate_w = ...
+    /*  now read zi and wi:
+        read {zi} from DDE_z = ...
+        read {wi} from DDE_w = ...
         {zi} and {wi} should have the same size.
-      */
-      int w_table_size = 0;
-      int w_table_flag;
-      class_call(parser_read_int(pfc,"w_table_size",&w_table_size,&w_table_flag,errmsg),
+    */
+    // int w_table_size = 0;
+    // int w_table_flag;
+    // class_call( parser_read_int(pfc,"w_table_size",&w_table_size,&w_table_flag,errmsg),
+    //             errmsg,
+    //             errmsg);
+    // class_test( w_table_size == 0 || w_table_flag == _FALSE_, errmsg,
+    //             "\n\n==> w_table_size can not be found or is found not by without given value.");
+
+    double *array_z, *array_w;
+    //   class_alloc(array_z, w_table_size*sizeof(double), errmsg);
+    //   class_alloc(array_w, w_table_size*sizeof(double), errmsg);
+
+    int z_size, w_size;
+    int flag_z, flag_w;
+    class_call(parser_read_list_of_doubles( pfc,
+                                            "DDE_z",
+                                            &z_size,
+                                            &array_z,
+                                            &flag_z,
+                                            errmsg),
+                                            errmsg,
+                                            errmsg);
+
+    class_test( !flag_z == _TRUE_,
                 errmsg,
-                errmsg);
-      class_test(w_table_size == 0 || w_table_flag == _FALSE_, errmsg,
-                "\n\n==> w_table_size can not be found or is found not by without given value.");
+                "\n\n==> array_z (DDE_z) cannot be read from *ini");
 
-      double **array_z, **array_w;
-      class_alloc(array_z, w_table_size*sizeof(double), errmsg);
-      class_alloc(array_w, w_table_size*sizeof(double), errmsg);
+    class_call(parser_read_list_of_doubles( pfc,
+                                            "DDE_w",
+                                            &w_size,
+                                            &array_w,
+                                            &flag_w,
+                                            errmsg),
+                                            errmsg,
+                                            errmsg);
 
-      int z_size, w_size;
-    //   class_call(parser_read_list_of_doubles(pfc,
-    //                                          array_z,))
+    class_test( !flag_w == _TRUE_,
+                errmsg,
+                "\n\n==> array_w (DDE_w) cannot be read from *ini");
 
-      free(array_z);
-      free(array_w);
+    class_test( z_size != w_size,
+                errmsg,
+                "\n\n==> readed array of {w} and {z} have different size, check you *ini file. Also note that \
+                a list of values SHOULD always be separated by comas.");
+
+    class_alloc(pba->DDE_z, z_size*sizeof(double),errmsg);
+    class_alloc(pba->DDE_w, w_size*sizeof(double),errmsg);
+
+//  array_z[] should be in increasing oder, and array_z[0] dose not need to be zero.
+    for( int i=0; i<w_size; i++ ){
+        pba->DDE_z[i] = array_z[i];
+        pba->DDE_w[i] = array_w[i];
+    }
+
+    free(array_z);
+    free(array_w);
   }
 
-  exit(0);
+  // exit(0);
 
   /** (b) assign values to thermodynamics cosmological parameters */
 
@@ -1218,8 +1249,8 @@ int input_read_parameters(
                                   &(string1),
                                   &(flag1),
                                   errmsg),
-               errmsg,
-               errmsg);
+                                  errmsg,
+                                  errmsg);
 
     if (flag1 == _TRUE_) {
       if ((strstr(string1,"y") != NULL) || (strstr(string1,"Y") != NULL)) {
@@ -1243,8 +1274,8 @@ int input_read_parameters(
                                 &(string1),
                                 &(flag1),
                                 errmsg),
-             errmsg,
-             errmsg);
+                                errmsg,
+                                errmsg);
 
   if (flag1 == _TRUE_) {
     if ((strstr(string1,"y") != NULL) || (strstr(string1,"Y") != NULL)) {
@@ -1392,8 +1423,8 @@ int input_read_parameters(
                                   &(string1),
                                   &(flag1),
                                   errmsg),
-               errmsg,
-               errmsg);
+                                  errmsg,
+                                  errmsg);
 
     if ((flag1 == _TRUE_) && ((strstr(string1,"y") != NULL) || (strstr(string1,"Y") != NULL))) {
       ppt->has_perturbed_recombination = _TRUE_;
@@ -2079,8 +2110,8 @@ int input_read_parameters(
                                 &(string1),
                                 &(flag1),
                                 errmsg),
-             errmsg,
-             errmsg);
+                                errmsg,
+                                errmsg);
 
   if ((flag1 == _TRUE_) && ((strstr(string1,"y") != NULL) || (strstr(string1,"Y") != NULL))) {
 
@@ -2127,8 +2158,8 @@ int input_read_parameters(
                                            &(pointer1),
                                            &flag1,
                                            errmsg),
-               errmsg,
-               errmsg);
+                                           errmsg,
+                                           errmsg);
 
     if (flag1 == _TRUE_) {
       class_test(int1 > _Z_PK_NUM_MAX_,
@@ -2151,8 +2182,8 @@ int input_read_parameters(
                                   &(string1),
                                   &(flag1),
                                   errmsg),
-               errmsg,
-               errmsg);
+                                  errmsg,
+                                  errmsg);
 
     if (flag1 == _TRUE_) {
       if (strstr(string1,"gaussian") != NULL) {
@@ -2175,8 +2206,8 @@ int input_read_parameters(
                                            &(pointer1),
                                            &flag1,
                                            errmsg),
-               errmsg,
-               errmsg);
+                                           errmsg,
+                                           errmsg);
 
     if ((flag1 == _TRUE_) && (int1>0)) {
 
@@ -2210,8 +2241,8 @@ int input_read_parameters(
                                              &(pointer1),
                                              &flag1,
                                              errmsg),
-                 errmsg,
-                 errmsg);
+                                             errmsg,
+                                             errmsg);
 
       if ((flag1 == _TRUE_) && (int1>0)) {
 
@@ -2239,8 +2270,8 @@ int input_read_parameters(
                                              &(pointer1),
                                              &flag1,
                                              errmsg),
-                 errmsg,
-                 errmsg);
+                                             errmsg,
+                                             errmsg);
 
       if ((flag1 == _TRUE_) && (int1>0)) {
 
@@ -2402,8 +2433,8 @@ int input_read_parameters(
                                 &(string1),
                                 &(flag1),
                                 errmsg),
-             errmsg,
-             errmsg);
+                                errmsg,
+                                errmsg);
 
   if ((flag1 == _TRUE_) && ((strstr(string1,"y") == NULL) && (strstr(string1,"Y") == NULL))) {
     pop->write_header = _FALSE_;
@@ -2433,8 +2464,8 @@ int input_read_parameters(
                                 &(string1),
                                 &(flag1),
                                 errmsg),
-             errmsg,
-             errmsg);
+                                errmsg,
+                                errmsg);
 
   if (flag1 == _TRUE_) {
 

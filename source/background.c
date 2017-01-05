@@ -151,8 +151,8 @@ int background_at_tau(
                                         pvecback,
                                         pvecback_size,
                                         pba->error_message),
-               pba->error_message,
-               pba->error_message);
+                                        pba->error_message,
+                                        pba->error_message);
   }
   if (intermode == pba->inter_closeby) {
     class_call(array_interpolate_spline_growing_closeby(
@@ -166,8 +166,8 @@ int background_at_tau(
                                                         pvecback,
                                                         pvecback_size,
                                                         pba->error_message),
-               pba->error_message,
-               pba->error_message);
+                                                        pba->error_message,
+                                                        pba->error_message);
   }
 
   return _SUCCESS_;
@@ -218,8 +218,8 @@ int background_tau_of_z(
                                       tau,
                                       1,
                                       pba->error_message),
-             pba->error_message,
-             pba->error_message);
+                                      pba->error_message,
+                                      pba->error_message);
 
   return _SUCCESS_;
 }
@@ -365,8 +365,8 @@ int background_functions(
                                          &p_ncdm,
                                          NULL,
                                          &pseudo_p_ncdm),
-                 pba->error_message,
-                 pba->error_message);
+                                         pba->error_message,
+                                         pba->error_message);
 
       pvecback[pba->index_bg_rho_ncdm1+n_ncdm] = rho_ncdm;
       rho_tot += rho_ncdm;
@@ -400,13 +400,21 @@ int background_functions(
   }
 
 /* added by Youhua Xu @ Jan-3, 2017 */
-  if (pba->has_tabulated_w == _TRUE_ ){
+  if (pba->has_DDE == _TRUE_ ){
     //   class_test(pba->has_lambda == _TRUE_,
     //              pba->error_message,
     //              "pba->has_lambda should not be true when using tabulated {wi}!");
 
 
-    // double rho_de
+    double w,weff;
+    class_call( background_EoS(pba,1./a_rel-1.,&w,&weff),
+                pba->error_message,
+                pba->error_message );
+    pvecback[pba->index_bg_w_DDE] = w;
+    pvecback[pba->index_bg_weff_DDE] = weff;
+    pvecback[pba->index_bg_rho_DDE] = pba->Omega0_DDE*pow(a_rel,-3.0*(1.+weff));
+    rho_tot += pvecback[pba->index_bg_rho_DDE];
+    p_tot += w*pvecback[pba->index_bg_rho_DDE];
   }
 
   /* relativistic neutrinos (and all relativistic relics) */
@@ -673,6 +681,15 @@ int background_free_input(
     if (pba->scf_parameters != NULL)
       free(pba->scf_parameters);
   }
+
+  if (pba->Omega0_DDE != 0.0 ){
+      if (pba->DDE_z != NULL)
+        free(pba->DDE_z);
+
+      if (pba->DDE_w != NULL)
+        free(pba->DDE_w);
+  }
+
   return _SUCCESS_;
 }
 
@@ -707,7 +724,7 @@ int background_indices(
   pba->has_fld = _FALSE_;
   pba->has_ur = _FALSE_;
   pba->has_curvature = _FALSE_;
-  pba->has_tabulated_w = _FALSE_;
+  pba->has_DDE = _FALSE_;
 
   if (pba->Omega0_cdm != 0.)
     pba->has_cdm = _TRUE_;
@@ -731,8 +748,8 @@ int background_indices(
     pba->has_fld = _TRUE_;
 
   /* added by Youhua Xu @Jan-4-2017 */
-  if( pba->Omega0_w != 0. ){
-    pba->has_tabulated_w = _TRUE_;
+  if( pba->Omega0_DDE != 0. ){
+    pba->has_DDE = _TRUE_;
 
   /* force switch off of other possibilities */
     pba->has_lambda = _FALSE_;
@@ -797,10 +814,10 @@ int background_indices(
   /* - index for fluid */
   class_define_index(pba->index_bg_rho_fld,pba->has_fld,index_bg,1);
 
-  /* - index for tabulated {wi} (added by Youhua Xu)
-     we need {wi} as well as {zi}
-  */
-  class_define_index(pba->index_bg_tabulated_w, pba->has_tabulated_w, index_bg, 2*pba->w_table_size);
+  /* - index for effective EoS of dark energy (added by Youhua Xu) */
+  class_define_index(pba->index_bg_w_DDE, pba->has_DDE, index_bg, 1);
+  class_define_index(pba->index_bg_weff_DDE, pba->has_DDE, index_bg, 1);
+  class_define_index(pba->index_bg_rho_DDE, pba->has_DDE, index_bg, 1);
 
   /* - index for ultra-relativistic neutrinos/species */
   class_define_index(pba->index_bg_rho_ur,pba->has_ur,index_bg,1);
@@ -972,7 +989,8 @@ int background_ncdm_distribution(
                                           f0,
                                           1,
                                           pba->error_message),
-                 pba->error_message,     pba->error_message);
+                                          pba->error_message,
+                                          pba->error_message);
     }
   }
 
@@ -1137,8 +1155,8 @@ int background_ncdm_init(
                                           pbadist.d2f0,
                                           _SPLINE_EST_DERIV_,
                                           pba->error_message),
-                 pba->error_message,
-                 pba->error_message);
+                                          pba->error_message,
+                                          pba->error_message);
       filenum++;
     }
 
@@ -1401,6 +1419,23 @@ int background_ncdm_M_from_Omega(
   class_test(iter>=maxiter,pba->error_message,
              "Newton iteration could not converge on a mass for some reason.");
   return _SUCCESS_;
+}
+
+int background_EoS(
+                    struct background *pba,
+                    double z,
+                    double *w,
+                    double *weff
+                    ){
+    if( z > pba->DDE_z[pba->DDE_table_size-1] ){
+        *w = -1.0;
+        *weff = -1.0;
+    }
+
+    *w = -1.0;
+    *weff = -1.0;
+
+    return _SUCCESS_;
 }
 
 /**

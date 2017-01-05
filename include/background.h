@@ -59,12 +59,15 @@ struct background
 		     not [delta p/delta rho] in the synchronous or
 		     newtonian gauge!!!) */
 
-/* *tabulate_w, *tabulate_z and w_table_size are added by Youhua Xu, @Jan-4-2017 */
-  double Omega0_w;
-  double *tabulate_w;   /**< \f$ \bm{w}=\{w_i\} \f$: a series of w_i at low redshifts, will be used to approximate w(z) at any redshift in
-                        the range covered by \f$ \bm{z}=\{z_i\} \f$ */
-  double *tabulate_z;   /**< \f$ \bm{z}=\{z_i\} \f$: redshifts correspond to w_i */
-  int    w_table_size;  /** <size of the tabulate */
+/* *DDE_w, *DDE_z and w_table_size are added by Youhua Xu, @Jan-4-2017 */
+  double w_DDE;
+  double weff_DDE;
+  double Omega0_DDE;
+  double *DDE_z;   /**< \f$ \bm{z}=\{z_i\} \f$: redshifts correspond to w_i */
+  double *DDE_w;   /**< \f$ \bm{w}=\{w_i\} \f$: a series of w_i at low redshifts, will be
+                        used to approximate w(z) at any redshift in the range covered by
+                        \f$ \bm{z}=\{z_i\} \f$ */
+  int    DDE_table_size;  /** <size of the tabulate */
 
   double Omega0_ur; /**< \f$ \Omega_{0 \nu r} \f$: ultra-relativistic neutrinos */
 
@@ -166,7 +169,10 @@ struct background
   int index_bg_rho_dcdm;      /**< dcdm density */
   int index_bg_rho_dr;        /**< dr density */
 
-  int index_bg_tabulated_w;   /**< tabulated EoS {wi}  (added by Youhua Xu @Jan-4-2017)*/
+  int index_bg_w_DDE;         /**< added by Youhua Xu.  We needed w to calculate pressure of DE, and add pressure
+                                contribution to p_tot */
+  int index_bg_weff_DDE;      /**< tabulated EoS {wi}  (added by Youhua Xu @Jan-4-2017)*/
+  int index_bg_rho_DDE;       /**< added by YHX */
 
   int index_bg_phi_scf;       /**< scalar field value */
   int index_bg_phi_prime_scf; /**< scalar field derivative wrt conformal time */
@@ -272,7 +278,7 @@ struct background
   short has_curvature; /**< presence of global spatial curvature? */
 
   /* added by Youhua Xu */
-  short has_tabulated_w; /**< presence of tabulated EoS for dark energy */
+  short has_DDE; /**< presence of tabulated EoS for dark energy */
 
   //@}
 
@@ -435,10 +441,10 @@ extern "C" {
                              double factor,
                              double z,
                              double * n,
-		             double * rho,
+		                     double * rho,
                              double * p,
                              double * drho_dM,
-			     double * pseudo_p
+			                 double * pseudo_p
                              );
 
   int background_ncdm_M_from_Omega(
@@ -446,6 +452,13 @@ extern "C" {
 				    struct background *pba,
 					int species
 				    );
+
+  int background_EoS( /* added by Youhua Xu */
+                    struct background *pba,
+                    double z,
+                    double *w,
+                    double *weff
+                    );
 
   int background_solve(
 		       struct precision *ppr,
