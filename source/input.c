@@ -940,9 +940,9 @@ int input_read_parameters(
           Omega0_DDE (EoS is approximated by a series of values.  added by Youhua Xu @Jan-4-2017)
       */
 
-    double param_DDE;
     int flag_DDE;
     int use_DDE = _FALSE_;
+    double param_DDE;
     class_call( parser_read_int(pfc,"use_DDE", &use_DDE, &flag_DDE, errmsg), errmsg, errmsg );
 
     /* added by Youhua Xu */
@@ -954,9 +954,24 @@ int input_read_parameters(
 
         printf("\n\n==> configuring DDE ...\n");
 
+        class_call( parser_read_double(pfc,
+                                      "DDE_EoS_at_high_z",
+                                      &param_DDE,
+                                      &flag_DDE,
+                                      errmsg),
+                    errmsg,
+                    errmsg);
+
+        /* this is the default value, and note that this is not the effective EoS */
+        if( flag_DDE == _FALSE_ )
+          pba->DDE_EoS_at_high_z = -1.0;
+        else
+          pba->DDE_EoS_at_high_z = param_DDE;
+
+      /* added bu YHX @ Jan-4-2017. 
+        BUT, pba->Omega0_DDE should be derived from the closure relation !!! 
+        So to correctly use DDE oprion, we just need to comment out or leave blanck of Omega_DDE */
         if ((flag_DDE == _TRUE_) && (param_DDE >= 0.)) {
-            /* added bu YHX @ Jan-4-2017.
-            BUT, pba->Omega0_DDE should be derived from the closure relation !!! */
             pba->Omega0_DDE = param_DDE;
             Omega_tot += pba->Omega0_DDE;
         }
@@ -1003,13 +1018,28 @@ int input_read_parameters(
         class_alloc(pba->DDE_w, w_size*sizeof(double),errmsg);
 
         //  array_z[] should be in increasing oder, and array_z[0] dose not need to be zero.
+        pba->DDE_z_max = -1.0;
         for( int i=0; i<pba->DDE_table_size; i++ ) {
             pba->DDE_z[i] = array_z[i];
             pba->DDE_w[i] = array_w[i];
+
+            if( pba->DDE_z_max <= array_z[i] )
+                pba->DDE_z_max = array_z[i];
+
+            printf("z = %6.4f  w = %6.4f\n", array_z[i], array_w[i]);
         }
+
+      /* debug code */
+        // printf("==> finished DDE consiguration:\n");
+        // printf("==> DDE_weff_at_high_z = %g\n", pba->DDE_weff_at_high_z);
+        // printf("==> DDE_z_max          = %g\n", pba->DDE_z_max);
+        // exit(0);
 
         free(array_z);
         free(array_w);
+
+        background_DDE_init(pba);
+        // exit(0);
     }
     else {
 
@@ -1119,7 +1149,7 @@ int input_read_parameters(
     }
 
     if( use_DDE == _TRUE_ ) {
-        /*  make sure all other DE components be zero */
+    /*  make sure all other DE components are set to zero */
         pba->Omega0_lambda = 0.0;
         pba->Omega0_fld = 0.0;
         pba->Omega0_scf = 0.0;

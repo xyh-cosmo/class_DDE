@@ -11,3 +11,4 @@ libclass.a
 python/classy.c
 python/*.pyc
 python/build/
+*.dSYM

@@ -70,6 +70,13 @@ struct background
     int    DDE_table_size;  /** <size of the tabulate */
     int    DDE_approximation; /* 0: steps; 1: spline interpolation over grids */
 
+    /** added two tables for later interpolation. by YHX */
+    double *DDE_EoS_table;
+    double *DDE_EoS_spline_table;
+    double DDE_EoS_at_high_z;
+    double DDE_weff_at_high_z;
+    double DDE_z_max;
+
     double Omega0_ur; /**< \f$ \Omega_{0 \nu r} \f$: ultra-relativistic neutrinos */
 
     double Omega0_dcdmdr; /**< \f$ \Omega_{0 dcdm}+\Omega_{0 dr} \f$: decaying cold dark matter (dcdm) decaying to dark radiation (dr) */
@@ -454,11 +461,11 @@ int background_ncdm_M_from_Omega(
     int species
 );
 
-int background_EoS_init(
+int background_DDE_init(
     struct background *pba
 );
 
-int background_EoS( /* added by Youhua Xu */
+int background_DDE_get_EoS( /* added by Youhua Xu */
     struct background *pba,
     double z,
     double *w,

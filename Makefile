@@ -130,6 +130,8 @@ TEST_HYPERSPHERICAL = test_hyperspherical.o
 
 TEST_STEPHANE = test_stephane.o
 
+TEST_EOS = test_EOS.o
+
 C_TOOLS =  $(addprefix tools/, $(addsuffix .c,$(basename $(TOOLS))))
 C_SOURCE = $(addprefix source/, $(addsuffix .c,$(basename $(SOURCE) $(OUTPUT))))
 C_TEST = $(addprefix test/, $(addsuffix .c,$(basename $(TEST_DEGENERACY) $(TEST_LOOPS) $(TEST_TRANSFER) $(TEST_NONLINEAR) $(TEST_PERTURBATIONS) $(TEST_THERMODYNAMICS))))
@@ -185,6 +187,8 @@ test_background: $(TOOLS) $(SOURCE) $(EXTERNAL) $(TEST_BACKGROUND)
 test_hyperspherical: $(TOOLS) $(TEST_HYPERSPHERICAL)
 	$(CC) $(OPTFLAG) $(OMPFLAG) $(LDFLAG) -o test_hyperspherical $(addprefix build/,$(notdir $^)) -lm
 
+test_EOS: $(TOOLS) $(SOURCE) $(EXTERNAL) $(TEST_EOS)
+	$(CC) $(OPTFLAG) $(OMPFLAG) $(LDFLAG) -o test_EOS $(addprefix build/,$(notdir $^)) -lm
 
 tar: $(C_ALL) $(C_TEST) $(H_ALL) $(PRE_ALL) $(INI_ALL) $(MISC_FILES) $(HYREC) $(PYTHON_FILES)
 	tar czvf class.tar.gz $(C_ALL) $(H_ALL) $(PRE_ALL) $(INI_ALL) $(MISC_FILES) $(HYREC) $(PYTHON_FILES)
