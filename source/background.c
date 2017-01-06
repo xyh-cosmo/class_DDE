@@ -1545,9 +1545,25 @@ int background_DDE_init( struct background *pba ){
     // }
 
     double w, weff;
-    background_DDE_get_EoS( pba, pba->DDE_z_max, &w, &weff );
+    // background_DDE_get_EoS( pba, pba->DDE_z_max, &w, &weff );
+
+    int last_index;
+    array_interpolate_spline( pba->DDE_z,
+                              pba->DDE_table_size,
+                              pba->DDE_EoS_table,
+                              pba->DDE_EoS_spline_table,
+                              3,
+                              pba->DDE_z_max,
+                              &last_index,
+                              &weff,
+                              3,
+                              pba->error_message);
+
+
     pba->DDE_weff_at_high_z = weff;
 
+    // printf("==> pba->DDE_z_max = %g\n", pba->DDE_z_max);
+    // printf("==> DDE_weff_at_high_z = %g\n",pba->DDE_weff_at_high_z);
     // printf("==> End of initialization of background_DDE\n");
     // exit(0);
 

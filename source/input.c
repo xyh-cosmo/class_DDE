@@ -1026,8 +1026,11 @@ int input_read_parameters(
             if( pba->DDE_z_max <= array_z[i] )
                 pba->DDE_z_max = array_z[i];
 
-            printf("z = %6.4f  w = %6.4f\n", array_z[i], array_w[i]);
+            // printf("debug ... z = %6.4f  w = %6.4f\n", array_z[i], array_w[i]);
         }
+
+        // printf("pba->DDE_table_size = %d\n", pba->DDE_table_size);
+        // exit(0);
 
       /* debug code */
         // printf("==> finished DDE consiguration:\n");
