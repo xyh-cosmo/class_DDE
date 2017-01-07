@@ -982,6 +982,10 @@ int input_read_parameters(
         double *array_z, *array_w;
         int z_size, w_size;
         int flag_z, flag_w;
+
+    /* determine how to read {w}: 0 == read from DDE_w;  1 == read from DDE_wi */
+        int DDE_w_format, DDE_w_format_flag;
+
         class_call(parser_read_list_of_doubles( pfc,
                                                 "DDE_z",
                                                 &z_size,
@@ -991,27 +995,70 @@ int input_read_parameters(
                    errmsg,
                    errmsg);
 
-        class_test( !flag_z == _TRUE_,
+        class_test( flag_z == _FALSE_,
                     errmsg,
-                    "\n\n==> array_z (DDE_z) cannot be read from *ini");
+                    "\n=> array_z (DDE_z) cannot be read from *ini");
 
-        class_call(parser_read_list_of_doubles( pfc,
-                                                "DDE_w",
-                                                &w_size,
-                                                &array_w,
-                                                &flag_w,
+        class_call(parser_read_int( pfc,
+                                    "DDE_w_format",
+                                    &DDE_w_format,
+                                    &DDE_w_format_flag,
+                                    errmsg),
+                  errmsg,
+                  errmsg);
+
+        class_test( DDE_w_format != 0 && DDE_w_format != 1,
+                    errmsg,
+                    "\n=> DDE_w_format must be 0 or 1, but you have specified %d\n",DDE_w_format);
+
+        if( DDE_w_format == 0 ){
+            class_call(parser_read_list_of_doubles( pfc,
+                                                    "DDE_w",
+                                                    &w_size,
+                                                    &array_w,
+                                                    &flag_w,
+                                                    errmsg),
+                       errmsg,
+                       errmsg);
+
+            class_test( flag_w == _FALSE_,
+                        errmsg,
+                        "\n=> array_w (DDE_w) cannot be read from *ini");
+
+            class_test( z_size != w_size,
+                        errmsg,
+                        "\n=> readed array of {w} and {z} have different size, check you *ini file. Also note that \
+                        a list of values SHOULD always be separated by comas.");
+        }
+        else if( DDE_w_format == 1 ){
+            /* readl {w} from DDE_wi, where i=0,...,DDE_table_size-1. In this case
+               we implicitly assume w_size = z_size, but if one of DDE_wi can not
+               be correctly read in, error will be return and stop run. */
+            char DDE_wi[10];
+            w_size = z_size;
+            class_alloc(array_w, sizeof(double)*w_size, errmsg);
+
+            for(int i=0; i<w_size; i++){
+                sprintf(DDE_wi,"DDE_w%d",i);
+                class_call( parser_read_double( pfc,
+                                                DDE_wi,
+                                                &(array_w[i]),
+                                                &DDE_w_format_flag,
                                                 errmsg),
-                   errmsg,
-                   errmsg);
+                            errmsg,
+                            errmsg);
 
-        class_test( !flag_w == _TRUE_,
-                    errmsg,
-                    "\n\n==> array_w (DDE_w) cannot be read from *ini");
+                class_test( DDE_w_format_flag == _FALSE_,
+                            errmsg,
+                            "\n=> failed to read %s", DDE_wi);
 
-        class_test( z_size != w_size,
-                    errmsg,
-                    "\n\n==> readed array of {w} and {z} have different size, check you *ini file. Also note that \
-                    a list of values SHOULD always be separated by comas.");
+                printf("DDE_w%d = %g\n", i, array_w[i]);
+            }
+        }
+
+        // printf("DDE_w_format = %d\n", DDE_w_format);
+        // printf("DDE_w_format_flag = %d\n",DDE_w_format_flag);
+        // exit(0);
 
         pba->DDE_table_size = z_size;
         class_alloc(pba->DDE_z, z_size*sizeof(double),errmsg);
