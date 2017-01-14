@@ -30,6 +30,11 @@ int main(int argc, char **argv) {
     return _FAILURE_;
   }
 
+  if( output_init(&ba, &th, &pt, &pm, &tr, &sp, &nl, &le, &op) == _FAILURE_) {
+    printf("\n\nError eunning output_init \n=>%s\n",op.error_message);
+    return _FAILURE_;
+  }
+
   /****** here you can output the evolution of any background
 	  quanitity you are interested in ******/
 
@@ -45,6 +50,13 @@ int main(int argc, char **argv) {
 	    ba.background_table[index_tau*ba.bg_size+ba.index_bg_H]);
 
   }
+
+  if( output_background(&ba,&op) == _FAILURE_ ) {
+    printf("\n\nError outputing background_data: %s\n",op.error_message);
+    return _FAILURE_;
+  } 
+
+// exit(0);
 
   /****** all calculations done, now free the structures ******/
 

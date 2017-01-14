@@ -401,23 +401,22 @@ int background_functions(
 
 /* added by Youhua Xu @ Jan-3, 2017 */
   if (pba->has_DDE == _TRUE_ ){
+
     double w,weff;
     double z = 1./a_rel-1.;
-    
+
     /* when a approaches 1.0, there might be some round-off errors so that z gets a value smaller than
-      zero, in this case we force z ro be zero to prevent further numerical error (interpolation) */
-    if( z <=0.0 )
-        z = 0.0; 
+      zero, in this case we force z back to zero to prevent further numerical error (interpolation) */
+    if( z <=0.0 ) z = 0.0;
+
     class_call( background_DDE_get_EoS( pba,
                                         z,
                                         &w,
                                         &weff),
                 pba->error_message,
                 pba->error_message);
-    
-    /*
-      pvecback[pba->index_bg_w_DDE] and pvecback[pba->index_bg_weff_DDE] are kept for unknown futher use ...
-     */
+    // printf("pba->H0 = %g\n", pba->H0);
+    // printf("pba->Omega0_DDE = %g\n", pba->Omega0_DDE); exit(0);
     pvecback[pba->index_bg_w_DDE] = w;
     pvecback[pba->index_bg_weff_DDE] = weff;
     pvecback[pba->index_bg_rho_DDE] = pba->Omega0_DDE * pow(pba->H0,2) * pow(a_rel,-3.0*(1.+weff));
@@ -1439,16 +1438,15 @@ int background_ncdm_M_from_Omega(
 /** added by YHX @ Jan-6-2017 */
 int background_DDE_init( struct background *pba ){
 
-    // printf("==> start initalizing background_DDE \n");
-
     double *temp;
 
     class_alloc(temp, sizeof(double)*pba->DDE_table_size*6, pba->error_message);
     class_alloc(pba->DDE_EoS_table, sizeof(double)*pba->DDE_table_size*3, pba->error_message);
     class_alloc(pba->DDE_EoS_spline_table, sizeof(double)*pba->DDE_table_size*3, pba->error_message);
 
-    double zi;    
-    for( int i=0; i<pba->DDE_table_size; i++){
+    double zi;
+    int i;
+    for( i=0; i<pba->DDE_table_size; i++){
         zi = pba->DDE_z[i];
         pba->DDE_EoS_table[i*3+0] = pba->DDE_w[i];
         pba->DDE_EoS_table[i*3+1] = pba->DDE_w[i]/(1.+zi);
@@ -1497,13 +1495,10 @@ int background_DDE_init( struct background *pba ){
 
 
     /* weff(z=0) = w(z=0) */
-    pba->DDE_EoS_table[0*3+2] = temp[0*6+0];    
-    for( int i=1; i<pba->DDE_table_size; i++ ){
+    pba->DDE_EoS_table[0*3+2] = temp[0*6+0];
+    for( i=1; i<pba->DDE_table_size; i++ ){
         pba->DDE_EoS_table[i*3+2] = temp[i*6+2]/log(1.+pba->DDE_z[i]);
-
-        // printf("pba->DDE_EoS_table[%2d*3+2] = %g\n", i, pba->DDE_EoS_table[i*3+2]);
     }
-    // exit(0);
 
     /* prepare the spline table */
     class_call( array_spline_table_lines(
@@ -1519,34 +1514,7 @@ int background_DDE_init( struct background *pba ){
 
     free(temp);
 
-    /* debug codes */
-
-    // int last_index;
-    // double z = 0.0, dz = 0.1, eos; 
-    // double result[3];
-    // while( z <= pba->DDE_z_max ){
-    //   // array_interpolate_spline( pba->DDE_z,
-    //   //                           pba->DDE_table_size,
-    //   //                           pba->DDE_EoS_table,
-    //   //                           pba->DDE_EoS_spline_table,
-    //   //                           3,
-    //   //                           z,
-    //   //                           &last_index,
-    //   //                           result,
-    //   //                           3,
-    //   //                           pba->error_message);
-
-    //   double w,weff;
-    //   background_DDE_get_EoS( pba, z, &w, &weff );
-
-    //   // printf("debug in background_DDE_init():  z = %6.4f  weff = %6.4f\n", z, result[2]);
-    //   printf("debug in background_DDE_init():  z = %6.4f  weff = %6.4f\n", z, weff);
-    //   z += dz;
-    // }
-
     double w, weff;
-    // background_DDE_get_EoS( pba, pba->DDE_z_max, &w, &weff );
-
     int last_index;
     array_interpolate_spline( pba->DDE_z,
                               pba->DDE_table_size,
@@ -1559,13 +1527,7 @@ int background_DDE_init( struct background *pba ){
                               3,
                               pba->error_message);
 
-
     pba->DDE_weff_at_high_z = weff;
-
-    // printf("==> pba->DDE_z_max = %g\n", pba->DDE_z_max);
-    // printf("==> DDE_weff_at_high_z = %g\n",pba->DDE_weff_at_high_z);
-    // printf("==> End of initialization of background_DDE\n");
-    // exit(0);
 
     return _SUCCESS_;
 }
@@ -1578,14 +1540,14 @@ int background_DDE_get_EoS(
                     double *weff
                     ){
 
-    
+
     if( z >= pba->DDE_z[pba->DDE_table_size-1] ){
         double zmax = pba->DDE_z_max;
         *w    = pba->DDE_EoS_at_high_z;
         *weff = (pba->DDE_weff_at_high_z*log(1.+zmax)+(*w)*log((1.+z)/(1.+zmax))) / log(1.+z);
     }
     else{
-    
+
         int last_index;
         double result[3]={0,0,0};
 
@@ -2136,6 +2098,12 @@ int background_output_titles(struct background * pba,
       class_store_columntitle(titles,tmp,_TRUE_);
     }
   }
+
+  /* added by YHX @ Jan-9-2017 */
+  class_store_columntitle(titles,"w_DDE",pba->has_DDE);
+  class_store_columntitle(titles,"weff_DDE",pba->has_DDE);
+  class_store_columntitle(titles,"(.)rho_DDE",pba->has_DDE);
+
   class_store_columntitle(titles,"(.)rho_lambda",pba->has_lambda);
   class_store_columntitle(titles,"(.)rho_fld",pba->has_fld);
   class_store_columntitle(titles,"(.)rho_ur",pba->has_ur);
@@ -2187,6 +2155,12 @@ int background_output_data(
         class_store_double(dataptr,pvecback[pba->index_bg_p_ncdm1+n],_TRUE_,storeidx);
       }
     }
+
+  /* store background quantities related to DDE. added by YHX @ Jan-9,2017 */
+    class_store_double(dataptr,pvecback[pba->index_bg_w_DDE],pba->has_DDE,storeidx);
+    class_store_double(dataptr,pvecback[pba->index_bg_weff_DDE],pba->has_DDE,storeidx);
+    class_store_double(dataptr,pvecback[pba->index_bg_rho_DDE],pba->has_DDE,storeidx);
+
     class_store_double(dataptr,pvecback[pba->index_bg_rho_lambda],pba->has_lambda,storeidx);
     class_store_double(dataptr,pvecback[pba->index_bg_rho_fld],pba->has_fld,storeidx);
     class_store_double(dataptr,pvecback[pba->index_bg_rho_ur],pba->has_ur,storeidx);

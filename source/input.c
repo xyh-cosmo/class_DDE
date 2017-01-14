@@ -952,8 +952,6 @@ int input_read_parameters(
 
     if (use_DDE == _TRUE_) {
 
-        printf("\n\n==> configuring DDE ...\n");
-
         class_call( parser_read_double(pfc,
                                       "DDE_EoS_at_high_z",
                                       &param_DDE,
@@ -968,8 +966,8 @@ int input_read_parameters(
         else
           pba->DDE_EoS_at_high_z = param_DDE;
 
-      /* added bu YHX @ Jan-4-2017. 
-        BUT, pba->Omega0_DDE should be derived from the closure relation !!! 
+      /* added bu YHX @ Jan-4-2017.
+        BUT, pba->Omega0_DDE should be derived from the closure relation !!!
         So to correctly use DDE oprion, we just need to comment out or leave blanck of Omega_DDE */
         if ((flag_DDE == _TRUE_) && (param_DDE >= 0.)) {
             pba->Omega0_DDE = param_DDE;
@@ -1031,14 +1029,15 @@ int input_read_parameters(
                         a list of values SHOULD always be separated by comas.");
         }
         else if( DDE_w_format == 1 ){
-            /* readl {w} from DDE_wi, where i=0,...,DDE_table_size-1. In this case
-               we implicitly assume w_size = z_size, but if one of DDE_wi can not
-               be correctly read in, error will be return and stop run. */
+        /* readl {w} from DDE_wi, where i=0,...,DDE_table_size-1. In this case
+           we implicitly assume w_size = z_size, but if one of DDE_wi can not
+           be correctly read in, error will be return and stop run. */
             char DDE_wi[10];
             w_size = z_size;
             class_alloc(array_w, sizeof(double)*w_size, errmsg);
 
-            for(int i=0; i<w_size; i++){
+            int i;
+            for( i=0; i<w_size; i++ ) {
                 sprintf(DDE_wi,"DDE_w%d",i);
                 class_call( parser_read_double( pfc,
                                                 DDE_wi,
@@ -1052,46 +1051,34 @@ int input_read_parameters(
                             errmsg,
                             "\n=> failed to read %s", DDE_wi);
 
-                printf("DDE_w%d = %g\n", i, array_w[i]);
+                // printf("DDE_w%d = %g\n", i, array_w[i]);
             }
         }
-
-        // printf("DDE_w_format = %d\n", DDE_w_format);
-        // printf("DDE_w_format_flag = %d\n",DDE_w_format_flag);
-        // exit(0);
 
         pba->DDE_table_size = z_size;
         class_alloc(pba->DDE_z, z_size*sizeof(double),errmsg);
         class_alloc(pba->DDE_w, w_size*sizeof(double),errmsg);
 
-        //  array_z[] should be in increasing oder, and array_z[0] dose not need to be zero.
+    //  array_z[] should be in increasing oder, and array_z[0] dose not need to be zero.
         pba->DDE_z_max = -1.0;
-        for( int i=0; i<pba->DDE_table_size; i++ ) {
+        int i;
+        for( i=0; i<pba->DDE_table_size; i++ ) {
             pba->DDE_z[i] = array_z[i];
             pba->DDE_w[i] = array_w[i];
 
             if( pba->DDE_z_max <= array_z[i] )
                 pba->DDE_z_max = array_z[i];
-
-            // printf("debug ... z = %6.4f  w = %6.4f\n", array_z[i], array_w[i]);
         }
-
-        // printf("pba->DDE_table_size = %d\n", pba->DDE_table_size);
-        // exit(0);
-
-      /* debug code */
-        // printf("==> finished DDE consiguration:\n");
-        // printf("==> DDE_weff_at_high_z = %g\n", pba->DDE_weff_at_high_z);
-        // printf("==> DDE_z_max          = %g\n", pba->DDE_z_max);
-        // exit(0);
 
         free(array_z);
         free(array_w);
 
         background_DDE_init(pba);
-        // exit(0);
     }
     else {
+
+    /*  make sure pba->Omega0_DDE = 0 */    
+        pba->Omega0_DDE = 0.;
 
         class_call(parser_read_double(pfc,"Omega_Lambda",&param1,&flag1,errmsg),
                    errmsg,
@@ -1204,12 +1191,6 @@ int input_read_parameters(
         pba->Omega0_fld = 0.0;
         pba->Omega0_scf = 0.0;
     }
-
-    // printf("pba->Omega0_lambda = %g\n", pba->Omega0_lambda);
-    // printf("pba->Omega0_fld    = %g\n", pba->Omega0_fld);
-    // printf("pba->Omega0_scf    = %g\n", pba->Omega0_scf);
-    // printf("pba->Omega0_DDE    = %g\n", pba->Omega0_DDE);
-    // exit(0);
 
     /** (b) assign values to thermodynamics cosmological parameters */
 
